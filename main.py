@@ -1,14 +1,16 @@
 import error_correction as ec
+import file_handler as fh
 
 napis = "kot"
 
 print("Napis: ", napis)
-napis_bin = ec.string_to_binary(napis)
-napis_bin_d = ec.binary_to_string(napis_bin)
-napis_bin_kod = ec.encode_string(napis)
-napis_pin_dekod = ec.decode_string(napis_bin_kod)
-print("W postaci binarnej: ", ec.print_binary_string(napis_bin))
-print("Po odkodowaniu z postaci binarnej: ", napis_bin_d)
-print("W postaci zakodowanej: ", ec.print_binary_string(napis_bin_kod))
-print("W postaci odkodowanej: ", napis_pin_dekod)
-
+napis_zakodowany = ec.encode_string(napis)
+print(fh.print_binary_string(napis_zakodowany))
+napis_zakodowany = list(napis_zakodowany)
+napis_zakodowany[0] = '1'
+napis_zakodowany[19] = '1'
+napis_zakodowany[37] = '0'
+napis_zakodowany = ''.join(napis_zakodowany)
+print(fh.print_binary_string(napis_zakodowany))
+napis_zakodowany = ec.correct_string(napis_zakodowany, ec.verify_string(napis_zakodowany))
+print(fh.print_binary_string(napis_zakodowany))

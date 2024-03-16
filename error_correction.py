@@ -12,20 +12,6 @@ def get_h_matrix():
 H = get_h_matrix()
 
 
-def print_binary_string(binary_string):  # do czytelnego zapisu w pliku
-    result = ""
-    while binary_string:
-        result += binary_string[:8]
-        binary_string = binary_string[8:]
-        if len(binary_string) >= 8:
-            result += " "
-    return result
-
-
-def get_binary_from_string(string):  # odczytanie ciagu bitow z pliku (bedzie ze spacjami - trzeba je usunac)
-    return string.replace(" ", "")
-
-
 def char_to_binary(char):
     return bin(ord(char))[2:].zfill(8)
 
@@ -51,12 +37,12 @@ def binary_to_string(binary):
 
 
 def get_parity_bits(char):
-    char_bits_array = list(char_to_binary(char))
+    char_bits = char_to_binary(char)
     parity_bits = ""
     for i in range(8):
         parity_bit = 0
         for j in range(8):
-            parity_bit += H[i][j] * int(char_bits_array[j])
+            parity_bit += H[i][j] * int(char_bits[j])
         parity_bit %= 2
         parity_bits += str(int(parity_bit))
     return parity_bits
@@ -83,3 +69,56 @@ def decode_string(binary):
         result += decode_char(binary[:16])
         binary = binary[16:]
     return result
+
+
+def verify_char(binary_char):
+    R = np.array(list(binary_char)).astype(int)
+    HR = np.dot(H, R)
+    HR %= 2
+    position = -1
+    for j in range(16):
+        match = True
+        for i in range(8):
+            if H[i][j] != HR[i]:
+                match = False
+                break
+        if match:
+            position = j
+            break
+    return position
+
+
+def correct_char(binary_char, position):
+    binary_char = list(binary_char)
+    if binary_char[position] == '0':
+        binary_char[position] = '1'
+    else:
+        binary_char[position] = '0'
+    binary_char = ''.join(binary_char)
+    return binary_char
+
+
+def verify_string(binary_string):
+    positions = []
+    iteration = 0
+    while binary_string:
+        binary_char = binary_string[:16]
+        position = (iteration * 16) + verify_char(binary_char)
+        if position >= 0:
+            positions.append(position)
+        binary_string = binary_string[16:]
+        iteration += 1
+    return positions
+
+
+def correct_string(binary_string, positions):
+    while len(positions) > 0:
+        index = len(positions) - 1
+        word_position = int(positions[index] / 16)
+        start_index = word_position * 16
+        end_index = start_index + 16
+        corrected_char = correct_char(binary_string[start_index:end_index], positions[index] % 16)
+        binary_string = binary_string[:start_index] + corrected_char + binary_string[end_index:]
+        positions.pop()
+    return binary_string
+
