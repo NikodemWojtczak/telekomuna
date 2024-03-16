@@ -103,8 +103,9 @@ def verify_string(binary_string):
     iteration = 0
     while binary_string:
         binary_char = binary_string[:16]
-        position = (iteration * 16) + verify_char(binary_char)
-        if position >= 0:
+        verification = verify_char(binary_char)
+        position = (iteration * 16) + verification
+        if verification != -1:
             positions.append(position)
         binary_string = binary_string[16:]
         iteration += 1
