@@ -1,15 +1,17 @@
 import numpy as np
 
+H = [
+    [0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    [0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+    [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+]
 
-def get_h_matrix():
-    matrix = np.ones((8, 8))
-    np.fill_diagonal(matrix, 0)
-    matrix = np.fliplr(matrix)
-    unit_matrix = np.eye(8)
-    return np.hstack((matrix, unit_matrix))
-
-
-H = get_h_matrix()
+H = np.array(H)
 
 
 def char_to_binary(char):
@@ -75,7 +77,8 @@ def verify_char(binary_char):
     R = np.array(list(binary_char)).astype(int)
     HR = np.dot(H, R)
     HR %= 2
-    position = -1
+    position = [-1]
+    match = False
     for j in range(16):
         match = True
         for i in range(8):
@@ -83,17 +86,27 @@ def verify_char(binary_char):
                 match = False
                 break
         if match:
-            position = j
+            position.pop()
+            position.append(j)
             break
+    if not match:
+        for i in range(len(H[0])):
+            for j in range(i + 1, len(H[0])):
+                sum_of_columns = [(H[k][i] + H[k][j]) % 2 for k in range(len(H))]
+                if sum_of_columns == HR:
+                    position.pop()
+                    position.append(i)
+                    position.append(j)
     return position
 
 
 def correct_char(binary_char, position):
     binary_char = list(binary_char)
-    if binary_char[position] == '0':
-        binary_char[position] = '1'
-    else:
-        binary_char[position] = '0'
+    for i in position:
+        if binary_char[i] == '0':
+            binary_char[i] = '1'
+        else:
+            binary_char[i] = '0'
     binary_char = ''.join(binary_char)
     return binary_char
 
@@ -104,9 +117,12 @@ def verify_string(binary_string):
     while binary_string:
         binary_char = binary_string[:16]
         verification = verify_char(binary_char)
-        position = (iteration * 16) + verification
-        if verification != -1:
-            positions.append(position)
+        position = []
+        for i in verification:
+            position.append((iteration * 16) + i)
+        if verification[0] != -1:
+            for p in position:
+                positions.append(p)
         binary_string = binary_string[16:]
         iteration += 1
     return positions
@@ -122,4 +138,3 @@ def correct_string(binary_string, positions):
         binary_string = binary_string[:start_index] + corrected_char + binary_string[end_index:]
         positions.pop()
     return binary_string
-
