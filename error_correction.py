@@ -1,13 +1,14 @@
 import numpy as np
 
-H = np.array([[1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-              [1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
-              [1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0],
-              [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0],
-              [1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-              [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-              [1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-              [0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]])
+
+H = np.array([[1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+              [0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0],
+              [0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0],
+              [1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+              [0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0],
+              [1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+              [1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+              [0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]])
 
 
 def char_to_binary(char):
@@ -73,7 +74,6 @@ def verify_char(binary_char):
     R = np.array(list(binary_char)).astype(int)
     HR = np.dot(H, R)
     HR %= 2
-    print(HR)
     position = [-1]
     match = False
     for j in range(16):
@@ -87,9 +87,9 @@ def verify_char(binary_char):
             position.append(j)
             break
     if not match:
-        for i in range(len(H[0])):
-            for j in range(i + 1, len(H[0])):
-                sum_of_columns = np.array([(H[k][i] + H[k][j]) % 2 for k in range(len(H))])
+        for i in range(16):
+            for j in range(i + 1, 16):
+                sum_of_columns = np.array([(H[k][i] + H[k][j]) % 2 for k in range(8)])
                 if np.array_equal(sum_of_columns, HR):
                     position.pop()
                     position.append(i)
