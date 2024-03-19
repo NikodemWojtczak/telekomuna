@@ -1,17 +1,13 @@
 import numpy as np
 
-H = [
-    [0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-    [1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-    [0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-    [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]
-]
-
-H = np.array(H)
+H = np.array([[1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+              [1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0],
+              [1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0],
+              [1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0],
+              [1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+              [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+              [1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+              [0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]])
 
 
 def char_to_binary(char):
@@ -77,6 +73,7 @@ def verify_char(binary_char):
     R = np.array(list(binary_char)).astype(int)
     HR = np.dot(H, R)
     HR %= 2
+    print(HR)
     position = [-1]
     match = False
     for j in range(16):
@@ -92,8 +89,8 @@ def verify_char(binary_char):
     if not match:
         for i in range(len(H[0])):
             for j in range(i + 1, len(H[0])):
-                sum_of_columns = [(H[k][i] + H[k][j]) % 2 for k in range(len(H))]
-                if sum_of_columns == HR:
+                sum_of_columns = np.array([(H[k][i] + H[k][j]) % 2 for k in range(len(H))])
+                if np.array_equal(sum_of_columns, HR):
                     position.pop()
                     position.append(i)
                     position.append(j)
@@ -134,7 +131,7 @@ def correct_string(binary_string, positions):
         word_position = int(positions[index] / 16)
         start_index = word_position * 16
         end_index = start_index + 16
-        corrected_char = correct_char(binary_string[start_index:end_index], positions[index] % 16)
+        corrected_char = correct_char(binary_string[start_index:end_index], [positions[index] % 16])
         binary_string = binary_string[:start_index] + corrected_char + binary_string[end_index:]
         positions.pop()
     return binary_string
