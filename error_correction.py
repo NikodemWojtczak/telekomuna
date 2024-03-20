@@ -11,6 +11,16 @@ H = np.array([[1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
               [0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1]])
 
 
+def is_binary_valid(binary_string):
+    if not all(char in '01' for char in binary_string):
+        return False
+    if len(binary_string) % 16 != 0:
+        return False
+    if len(binary_string) == 0:
+        return False
+    return True
+
+
 def char_to_binary(char):
     return bin(ord(char))[2:].zfill(8)
 

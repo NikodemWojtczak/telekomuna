@@ -1,3 +1,7 @@
 .idea
 __pychache__/
 *.pyc
+komunikat_po_transmisji.txt
+komunikat_po_transmisji_zakodowany.txt
+komunikat_przed_transmisja.txt
+komunikat_przed_transmisja_zakodowany.txt
