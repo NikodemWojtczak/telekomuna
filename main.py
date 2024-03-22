@@ -17,7 +17,8 @@ while True:
         mess = fh.read_message("komunikat_przed_transmisja.txt")
         if len(mess) > 0:
             print("WYBRANY KOMUNIKAT DO WYSŁANIA --> ", end='')
-            print(mess)
+            print(mess, end='')
+            print(", DŁUGOŚĆ:", len(mess))
             print("POSTAĆ BINARNA WIADOMOŚCI ------> ", end='')
             print(ec.string_to_binary(mess))
             is_message = True
@@ -26,6 +27,7 @@ while True:
     if os.path.exists("komunikat_przed_transmisja_zakodowany.txt"):  # sprawdzenie czy zakodowana wiadomość w pliku
         decoded_message = ""                                         # jest poprawna i czy odpowiada wybranej wiadomości
         binary_message = fh.read_message("komunikat_przed_transmisja_zakodowany.txt")
+        binary_message = ec.string_to_binary(binary_message)
         if ec.is_binary_valid(binary_message):
             decoded_message = ec.decode_string(binary_message)  # jeżeli jest ok to wypisujemy potem zakodowaną
         if decoded_message == mess and len(ec.verify_string(binary_message)) == 0:  # wiadomość na ekran w celach
@@ -34,7 +36,9 @@ while True:
             is_encoded = False
     if is_encoded:  # wypisanie zakodowanej wiadomości która jest w pliku
         print("WIADOMOŚĆ ZAKODOWANA -----------> ", end="")
-        print(fh.read_message("komunikat_przed_transmisja_zakodowany.txt"))
+        zakodowana = fh.read_message("komunikat_przed_transmisja_zakodowany.txt")
+        print(zakodowana, end="")
+        print(", DŁUGOŚĆ:", len(zakodowana))
         print("[INFO] Możesz wprowadzić zmiany w pliku 'komunikat_po_transmisji_zakodowany.txt',"
               " jednak nie może to być więcej niż 2 błędy na 16 bitów.")
     print("-----------------------------------------------------------------------------"
@@ -56,7 +60,8 @@ while True:
         if is_message:
             message = fh.read_message("komunikat_przed_transmisja.txt")
             encoded_message = ec.encode_string(message)
-            fh.write_message("komunikat_przed_transmisja_zakodowany.txt", encoded_message)
+            encoded_message_string = ec.binary_to_string(encoded_message)
+            fh.write_message("komunikat_przed_transmisja_zakodowany.txt", encoded_message_string)
             fh.write_message("komunikat_po_transmisji_zakodowany.txt", encoded_message)
             print("[INFO] Zakodowano komunikat. Znajduje się w pliku 'komunikat_przed_transmisja_zakodowany.txt'.")
             print("[INFO] Po kontynuowaniu, możliwe będzie wprowadzanie błędów w pliku "
