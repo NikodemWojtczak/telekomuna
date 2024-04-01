@@ -13,20 +13,18 @@ while True:
     print("JEŻELI DANE W PLIKACH SĄ SFORMATOWANE POPRAWNIE, ZOSTANĄ PONIŻEJ WYŚWIETLONE.")
     print("-----------------------------------------------------------------------------"
           "-------------------------------------------------------")
-    if os.path.exists("komunikat_przed_transmisja.txt"):  # wypisanie wybranego komunikatu z pliku czysto informacyjnie
-        mess = fh.read_message("komunikat_przed_transmisja.txt")
+    if os.path.exists("do_wyslania.txt"):  # wypisanie wybranego komunikatu z pliku czysto informacyjnie
+        mess = fh.read_message("do_wyslania.txt")
         if len(mess) > 0:
             print("WYBRANY KOMUNIKAT DO WYSŁANIA --> ", end='')
             print(mess, end='')
             print(", DŁUGOŚĆ:", len(mess))
-            print("POSTAĆ BINARNA WIADOMOŚCI ------> ", end='')
-            print(ec.string_to_binary(mess))
             is_message = True
         else:
             is_message = False
-    if os.path.exists("komunikat_przed_transmisja_zakodowany.txt"):  # sprawdzenie czy zakodowana wiadomość w pliku
+    if os.path.exists("komunikat_zakodowany.txt"):  # sprawdzenie czy zakodowana wiadomość w pliku
         decoded_message = ""                                         # jest poprawna i czy odpowiada wybranej wiadomości
-        binary_message = fh.read_message("komunikat_przed_transmisja_zakodowany.txt")
+        binary_message = fh.read_message("komunikat_zakodowany.txt")
         binary_message = ec.string_to_binary(binary_message)
         if ec.is_binary_valid(binary_message):
             decoded_message = ec.decode_string(binary_message)  # jeżeli jest ok to wypisujemy potem zakodowaną
@@ -36,10 +34,10 @@ while True:
             is_encoded = False
     if is_encoded:  # wypisanie zakodowanej wiadomości która jest w pliku
         print("WIADOMOŚĆ ZAKODOWANA -----------> ", end="")
-        zakodowana = fh.read_message("komunikat_przed_transmisja_zakodowany.txt")
+        zakodowana = fh.read_message("komunikat_zakodowany.txt")
         print(zakodowana, end="")
         print(", DŁUGOŚĆ:", len(zakodowana))
-        print("[INFO] Możesz wprowadzić zmiany w pliku 'komunikat_po_transmisji_zakodowany.txt',"
+        print("[INFO] Możesz wprowadzić zmiany w pliku 'komunikat_zakodowany_bin.txt',"
               " jednak nie może to być więcej niż 2 błędy na 16 bitów.")
     print("-----------------------------------------------------------------------------"
           "-------------------------------------------------------")
@@ -47,33 +45,34 @@ while True:
     print("2. Zakoduj wiadomość przed transmisją, zresetuj wcześniej wprowadzone błędy")
     print("3. Odbierz wiadomość, zweryfikuj ją, popraw")
     print("4. Wyjście")
+    print("[INFO] Wybranie innej opcji spowoduje zaktualizowanie odczytanych wiadomości z plików.")
     print("WYBÓR: ", end='')
     choice = input()
     if choice == '1':  # wybór komunikatu
         print("PODAJ KOMUNIKAT: ", end='')
         message = input()
-        fh.write_message("komunikat_przed_transmisja.txt", message)
-        print("[INFO] Zapisano komunikat. Znajduje się w pliku 'komunikat_przed_transmisja.txt'.")
+        fh.write_message("do_wyslania.txt", message)
+        print("[INFO] Zapisano komunikat. Znajduje się w pliku 'do_wyslania.txt'.")
         input("WYBIERZ ENTER ABY KONTYNUOWAĆ...")
         is_message = True
     elif choice == '2':  # zakodowanie wiadomości, zresetowanie błędów w pliku
         if is_message:
-            message = fh.read_message("komunikat_przed_transmisja.txt")
+            message = fh.read_message("do_wyslania.txt")
             encoded_message = ec.encode_string(message)
             encoded_message_string = ec.binary_to_string(encoded_message)
-            fh.write_message("komunikat_przed_transmisja_zakodowany.txt", encoded_message_string)
-            fh.write_message("komunikat_po_transmisji_zakodowany.txt", encoded_message)
-            print("[INFO] Zakodowano komunikat. Znajduje się w pliku 'komunikat_przed_transmisja_zakodowany.txt'.")
+            fh.write_message("komunikat_zakodowany.txt", encoded_message_string)
+            fh.write_message("komunikat_zakodowany_bin.txt", encoded_message)
+            print("[INFO] Zakodowano komunikat. Znajduje się w pliku 'komunikat_zakodowany.txt'.")
             print("[INFO] Po kontynuowaniu, możliwe będzie wprowadzanie błędów w pliku "
-                  "'komunikat_po_transmisji_zakodowany.txt'.")
+                  "'komunikat_zakodowany_bin.txt'.")
             is_encoded = True
         else:
             print("[BŁĄD] Brak wiadomości do zakodowania.")
         input("WYBIERZ ENTER ABY KONTYNUOWAĆ...")
     elif choice == '3':  # odbiór wiadomości, weryfikacja, poprawki
         if is_encoded:
-            print("[INFO] Odczytywanie wiadomości z pliku 'komunikat_po_transmisji_zakodowany.txt'.")
-            send_message = fh.read_message("komunikat_po_transmisji_zakodowany.txt")
+            print("[INFO] Odczytywanie wiadomości z pliku 'komunikat_zakodowany_bin.txt'.")
+            send_message = fh.read_message("komunikat_zakodowany_bin.txt")
             if ec.is_binary_valid(send_message):
                 print("[INFO] Wiadomość odczytana pomyślnie.")
                 error_positions = ec.verify_string(send_message)
@@ -85,9 +84,9 @@ while True:
                     send_message = ec.correct_string(send_message, error_positions)
                     print("[INFO] Błędy zostały poprawione.")
                 send_message_decoded = ec.decode_string(send_message)
-                fh.write_message("komunikat_po_transmisji.txt", send_message_decoded)
+                fh.write_message("komunikat_otrzymany.txt", send_message_decoded)
                 print(f"[INFO] Odebrano wiadomość o treści: '{send_message_decoded}'.")
-                print("[INFO] Zapisano odebraną wiadomość w pliku 'komunikat_po_transmisji.txt'.")
+                print("[INFO] Zapisano odebraną wiadomość w pliku 'komunikat_otrzymany.txt'.")
 
             else:
                 print("[BŁĄD] Odebrana wiadomość nie ma poprawnego formatowania.")
