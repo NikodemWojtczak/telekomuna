@@ -1,7 +1,10 @@
+./.idea
+./__pychache__/
+./*.pyc
 .idea
 __pychache__/
 *.pyc
-komunikat_otrzymany.txt
-komunikat_zakodowany_bin.txt
-do_wyslania.txt
-komunikat_zakodowany.txt
+zad1/komunikat_otrzymany.txt
+zad1/komunikat_zakodowany_bin.txt
+zad1/do_wyslania.txt
+zad1/komunikat_zakodowany.txt
