@@ -1,5 +1,5 @@
 import time
-
+import math
 import serial
 
 
@@ -21,6 +21,8 @@ PORT = serial.Serial(
     timeout=None
 )
 
+print("Utworzyłem obiekt klasy Serial.")
+
 # znaki, które będą wysyłane i odbierane poprzez port szeregowy
 
 SOH = bytearray.fromhex("01")  # StartOfHeader - początek nagłówka
@@ -35,6 +37,7 @@ def read_file(filename):
     try:
         with open(filename, 'rb') as file:
             binary_data = file.read()
+            print("Odczytałem zawartość pliku.")
             return binary_data
     except FileNotFoundError:
         print("Plik nie został znaleziony.")
@@ -48,6 +51,7 @@ def write_file(filename, bytes_array):
     try:
         with open(filename, 'wb') as file:
             file.write(bytes_array)
+            print("Zapisałem zawartość do pliku.")
     except FileNotFoundError:
         print("Plik nie został znaleziony.")
         return None
@@ -60,7 +64,7 @@ def write_file(filename, bytes_array):
 
 def split_data(bytes_array):
     blocks = []
-    num_blocks = len(bytes_array) // 128
+    num_blocks = math.ceil(len(bytes_array) / 128)
     for block_nr in range(num_blocks):
         block = bytearray()
         for b in range(128):
@@ -118,7 +122,7 @@ def prepare_packet(data, packet_nr, mode):
         full.append(crc[0])
         full.append(crc[1])
     elif mode == NAK:
-        full.apend(calculate_checksum(data))
+        full.append(calculate_checksum(data))
     return full
 
 
@@ -152,14 +156,18 @@ def send_packet(data, packet_nr, mode):
 def send_file(filename):
     file_bytes = read_file(filename)
     file_blocks = split_data(file_bytes)
+    print("Rodzieliłem dane na bloki.")
     packet_nr = 1
     PORT.flush()
     initial_answer = PORT.read()
+    print("Przeczytałem wiadomość wstępną od odbiorcy.")
     while initial_answer != C and initial_answer != NAK:
         PORT.flush()
         initial_answer = PORT.read()
     mode = initial_answer
+    print("Odczytałem wiadomość od odbiorcy.")
     for block in file_blocks:
+        print("Zaczynam przesyłać.")
         PORT.flush()
         send_packet(block, packet_nr, mode)
         print("Wysłano pakiet nr", packet_nr)
@@ -183,10 +191,12 @@ def start_receiving(mode):
         PORT.reset_input_buffer()
         PORT.write(mode)
         initial_receive = PORT.read()
+        print("Odczytałem wiadomość od nadawcy.")
         if initial_receive == SOH:
+            print("Nadawca zaczął przesyłać wiadomość.")
             return initial_receive
         else:
-            return None
+            continue
 
 
 # metoda odczytująca 128 bajtów (czyli blok danych) z portu szeregowego
@@ -209,8 +219,8 @@ def check_packet(packet, mode):
     self_check = bytearray()
     if mode == NAK:
         check += PORT.read()
-        self_check += calculate_checksum(packet)
-        if check[0] == self_check[1]:
+        self_check.append(calculate_checksum(packet))
+        if check[0] == self_check[0]:
             PORT.write(ACK)
             return True
         else:
@@ -275,3 +285,7 @@ def receive_data(mode, filename):
     PORT.write(ACK)
     print("Wszystkie dane zostały odebrane.")
     write_file(filename, file_bytes)
+
+
+send_file("info.txt")
+PORT.close()
