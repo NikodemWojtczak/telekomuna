@@ -1,4 +1,3 @@
-import time
 import math
 import constants
 
@@ -171,6 +170,7 @@ def start_receiving(port, mode):
             return initial_receive
         else:
             continue
+    return None
 
 
 # metoda odczytująca 128 bajtów (czyli blok danych) z portu szeregowego
@@ -257,7 +257,9 @@ def receive_file(port, mode, filename):
             if initial_receive == constants.EOT:
                 print("[NAD][EOT] Nadawca zakończył przesyłanie danych.")
                 break
-    port.write(constants.ACK)
-    print("[ODB][ACK] Informuję nadajnik o poprawności przesłania wszystkich danych.")
-    write_file(filename, file_bytes)
-    print("[INFO] Zapisano dane do wskazanego pliku.")
+        port.write(constants.ACK)
+        print("[ODB][ACK] Informuję nadajnik o poprawności przesłania wszystkich danych.")
+        write_file(filename, file_bytes)
+        print("[INFO] Zapisano dane do wskazanego pliku.")
+    else:
+        print("[BŁĄD] Minęła minuta, nadajnik nie zaczął przesyłać. Kończę transmisję.")
