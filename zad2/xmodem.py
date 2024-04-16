@@ -183,12 +183,15 @@ def receive_data_block(port):
 
 
 # SPRAWDZANIE POPRAWNOŚCI PAKIETU:
-# opiera się wyłącznie na wyliczeniu odpowiedniej sumy kontrolnej przez odbiornik i porównaniu jej
-# z sumą kontrolną z odebranego pakietu,
+# opiera się na wyliczeniu odpowiedniej sumy kontrolnej przez odbiornik i porównaniu jej
+# z sumą kontrolną z odebranego pakietu, ponadto sprawdzane jest czy numer pakietu odpowiada jego dopełnieniu do 255
 # jeżeli pakiet jest poprawny, odbiornik wysyła ACK, jeżeli nie, to wysyła NAK, a nadajnik będzie musiał ponownie
 # przesłać pakiet.
 
-def check_packet(port, packet, mode):
+def check_packet(port, packet, num, num_complement, mode):
+    if (255 - num) != num_complement:
+        port.write(constants.NAK)
+        return False
     check = bytearray()
     self_check = bytearray()
     if mode == constants.NAK:
@@ -230,7 +233,7 @@ def receive_packet(port, initial_receive, mode):
     header += port.read()
     header += port.read()
     packet = receive_data_block(port)
-    if check_packet(port, packet, mode):
+    if check_packet(port, packet, header[1], header[2], mode):
         print("[INFO] Otrzymano pakiet nr", header[1])
         while packet[-1] == 0x1A:
             packet = packet[:-1]
