@@ -14,6 +14,29 @@ class Node:
         return self.frequency < next_node.frequency
 
 
+def create_tree(dictionary):
+    nodes = []  # lista zawierająca węzły drzewa
+    for key, value in dictionary.items():
+        heapq.heappush(nodes, Node(value, key))
+    while len(nodes) > 1:
+        # pobranie dwóch węzłów z najmniejszą częstością
+        left = heapq.heappop(nodes)
+        right = heapq.heappop(nodes)
+        # przyporządkowanie wartości kierunkowych tym węzłom (0 - lewy, 1 - prawy)
+        left.huff = '0'
+        right.huff = '1'
+        # połączenie tych dwóch węzłów, aby stworzyć węzeł będący dla tych węzłów rodzicem
+        newNode = Node(left.frequency + right.frequency, left.symbol + right.symbol, left, right)
+        # dodanie nowego węzła do stosu
+        heapq.heappush(nodes, newNode)
+    return nodes
+
+
+class Huffman:
+    def __init__(self, dictionary):
+        self.nodes = create_tree(dictionary)
+
+
 def find_huff(node, symbol, current_code=''):  # szuka w drzewie kodu Huffmana podanego symbolu
     if node.symbol == symbol:
         return current_code
@@ -54,42 +77,3 @@ def decode(node, message):  # dekodowanie wiadomości
         message, symbol = find_symbol(node, message)
         decoded_message += symbol
     return decoded_message
-
-
-# funkcja w celach testowych wypisująca drzewo Huffmana
-
-# def printNodes(node, val=''):
-#     newVal = val + str(node.huff)  # kod Huffmana dla obecnego węzła
-#     if node.left_node:  # jeżeli węzeł nie jest krawędzią drzewa, to przeszukuj kolejne węzły wgłąb
-#         printNodes(node.left_node, newVal)
-#     if node.right_node:
-#         printNodes(node.right_node, newVal)
-#     if not node.left_node and not node.right_node:  # jeżeli węzeł jest krawędzią do wypisz jego kod Huffmana
-#         print(f"{node.symbol} -> {newVal}")
-
-
-nodes = []  # lista zawierająca węzły drzewa
-
-# konwertowanie symboli i częstości w węzły drzewa Huffmana
-
-for key, value in fd.frequency_dictionary.items():
-    heapq.heappush(nodes, Node(value, key))
-
-while len(nodes) > 1:
-    # pobranie dwóch węzłów z najmniejszą częstością
-    left = heapq.heappop(nodes)
-    right = heapq.heappop(nodes)
-    # przyporządkowanie wartości kierunkowych tym węzłom (0 - lewy, 1 - prawy)
-    left.huff = '0'
-    right.huff = '1'
-    # połączenie tych dwóch węzłów, aby stworzyć węzeł będący dla tych węzłów rodzicem
-    newNode = Node(left.frequency + right.frequency, left.symbol + right.symbol, left, right)
-    # dodanie nowego węzła do stosu
-    heapq.heappush(nodes, newNode)
-
-
-# encoded = encode(nodes[0], "Hello")
-# print(encoded)
-# decoded = decode(nodes[0], encoded)
-# print(decoded)
-
