@@ -19,7 +19,7 @@ if choice == '1':
     print("--- USTAWIANIE POŁĄCZENIA - TWORZENIE GNIAZDA SIECIOWEGO ---")
     host_address = input("Podaj adres hosta:")
     port = input("Podaj port:")
-    tcp_socket = tcp.TCP(host_address, port)
+    tcp_socket = tcp.TCP(host_address, int(port))
     try:
         tcp_socket.send_file(filename2)
         print("Plik został przesłany pomyślnie.")
@@ -31,7 +31,7 @@ elif choice == '2':
     print("--- USTAWIANIE POŁĄCZENIA - TWORZENIE GNIAZDA SIECIOWEGO ---")
     host_address = input("Podaj adres hosta:")
     port = input("Podaj port:")
-    tcp_socket = tcp.TCP(host_address, port)
+    tcp_socket = tcp.TCP(host_address, int(port))
     try:
         tcp_socket.receive_file(filename1)
         encoded_message = file_h.read_message(filename1)
