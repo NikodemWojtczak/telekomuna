@@ -1,6 +1,4 @@
 import heapq
-import frequency_dictionary as fd
-
 
 class Node:
     def __init__(self, frequency, symbol, left_node=None, right_node=None):
@@ -10,8 +8,8 @@ class Node:
         self.right_node = right_node  # wskaźnik do węzła po prawej stronie
         self.huff = ''  # kod znaku w drzewie Huffmana
 
-    def __lt__(self, next_node):
-        return self.frequency < next_node.frequency
+    def __lt__(self, next_node):  # potrzebne do tego, żeby węzły umieścić na stosie wg priorytetu (częstości)
+        return self.frequency < next_node.frequency  # w kolejności rosnącej
 
 
 def create_tree(dictionary):
@@ -33,8 +31,8 @@ def create_tree(dictionary):
 
 
 class Huffman:
-    def __init__(self, dictionary):
-        self.nodes = create_tree(dictionary)
+    def __init__(self, dictionary):  # inicjalizujemy drzewo słownikiem zawierającym częstości
+        self.nodes = create_tree(dictionary)  # poszczególnych symboli w kodowanym tekście
 
 
 def find_huff(node, symbol, current_code=''):  # szuka w drzewie kodu Huffmana podanego symbolu
@@ -64,16 +62,48 @@ def find_symbol(node, decoded_mess):  # szuka w drzewie symbolu, jeżeli trafi n
     return [decoded_mess, next_node.symbol]
 
 
-def encode(node, message):  # kodowanie wiadomości
+def create_dictionary(string):  # tworzy słownik z częstością symboli występujących w tekście
+    dictionary = {}  # każda para w słowniku to klucz: wartość, u nas symbol: częstość
+    for char in string:
+        if char in dictionary:
+            dictionary[char] += 1
+        else:
+            dictionary[char] = 1
+    return dictionary
+
+
+def encode(message):  # kodowanie wiadomości
     encoded_message = ''
-    for char in message:
-        encoded_message += find_huff(node, char)
-    return encoded_message
+    zeros_added = 0
+    dictionary = create_dictionary(message)
+    tree = Huffman(dictionary)
+    for char in message:  # tworzymy napis z kodów z drzewa Huffmana dla symboli w tekście
+        encoded_message += find_huff(tree.nodes[0], char)
+    while len(encoded_message) % 8 != 0:  # uzupełniamy napis zerami, aby jego długość była wielokrotnością 8 bitów
+        encoded_message += '0'
+        zeros_added += 1
+    encoded_bytes = bytearray()
+    for i in range(0, len(encoded_message), 8):  # wyciągamy z tego napisu bajty
+        subarray = encoded_message[i:i+8]
+        byte = int(subarray, 2)
+        encoded_bytes.append(byte)
+    encoded_bytes.append(zeros_added)  # dodajemy na koniec jeden bajt informujący o ilości zer dodanych jako padding
+    return [dictionary, encoded_bytes]
 
 
-def decode(node, message):  # dekodowanie wiadomości
+def decode(dictionary, message_bytes):  # dekodowanie wiadomości
+    message = ''
     decoded_message = ''
-    while len(message) > 0:
-        message, symbol = find_symbol(node, message)
+    tree = Huffman(dictionary)
+    for i in range(len(message_bytes)-1):  # przekształcamy tablicę bajtów na ciąg bitów do napisu
+        bin_array = bin(message_bytes[i])[2:].zfill(8)
+        message += bin_array
+    zeros_added = message_bytes[-1]
+    for i in range(zeros_added):  # usuwamy padding
+        message = message[:-1]
+    print("[INFO] Dekodowanie odbędzie się dla następującego ciągu bitów"
+          " (bez paddingu):", message, ", łącznie", len(message), "b.")
+    while len(message) > 0:  # właściwe dekodowanie
+        message, symbol = find_symbol(tree.nodes[0], message)
         decoded_message += symbol
     return decoded_message
