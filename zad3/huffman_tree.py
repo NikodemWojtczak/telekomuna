@@ -101,8 +101,6 @@ def decode(dictionary, message_bytes):  # dekodowanie wiadomości
     zeros_added = message_bytes[-1]
     for i in range(zeros_added):  # usuwamy padding
         message = message[:-1]
-    print("[INFO] Dekodowanie odbędzie się dla następującego ciągu bitów"
-          " (bez paddingu):", message, ", łącznie", len(message), "b.")
     while len(message) > 0:  # właściwe dekodowanie
         message, symbol = find_symbol(tree.nodes[0], message)
         decoded_message += symbol

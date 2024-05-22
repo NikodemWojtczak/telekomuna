@@ -15,9 +15,12 @@ class TCP:
                 message = file.read()  # odczytujemy wiadomość
                 dictionary, encoded_bytes = ht.encode(message)  # kodujemy ją
                 print("[INFO] Wiadomość zakodowana ma długość", len(encoded_bytes), "B")
+                serialized_dictionary = pickle.dumps(dictionary)
+                print("[INFO] Przesłany słownik z częstotliwościami symboli ma długość", len(serialized_dictionary),
+                      "B")
                 serialized_data = pickle.dumps((dictionary, encoded_bytes))  # serializujemy wiadomość i słownik
-                print("[INFO] Po serializacji wiadomości i tablicy częstości przesyłam", len(serialized_data), "B")
                 s.sendall(serialized_data)  # przesyłamy zserializowane dane
+        return [serialized_dictionary, encoded_bytes]
 
     def receive(self, file_path):
         serialized_data = b""
