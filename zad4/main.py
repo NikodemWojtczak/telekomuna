@@ -1,17 +1,20 @@
-import soundcard as sc
+import pyaudio
+import wave
 import numpy as np
-from scipy.io.wavfile import read, write
+from scipy.io import wavfile
 
 breakFlag = False
 quantization_lvl = None
+CHANNELS = 2
+CHUNK = 1024
 
 
-def calculate_snr(original_signal, quantized_signal):
-    noise = original_signal - quantized_signal
-    signal_sqr = np.mean(original_signal ** 2)
-    noise_sqr = np.mean(noise ** 2)
-    snr = 10 * np.log10(signal_sqr / noise_sqr)
-    return snr
+# def calculate_snr(original_signal, quantized_signal):
+#     noise = original_signal - quantized_signal
+#     signal_sqr = np.mean(original_signal ** 2)
+#     noise_sqr = np.mean(noise ** 2)
+#     snr = 10 * np.log10(signal_sqr / noise_sqr)
+#     return snr
 
 
 print("")
@@ -31,11 +34,11 @@ while True:
         print("Twój wybór:")
         quantization_lvl_choice = input(">> ")
         if quantization_lvl_choice == "1":
-            quantization_lvl = 8
+            quantization_lvl = pyaudio.paInt8
         elif quantization_lvl_choice == "2":
-            quantization_lvl = 16
+            quantization_lvl = pyaudio.paInt16
         elif quantization_lvl_choice == "3":
-            quantization_lvl = 32
+            quantization_lvl = pyaudio.paInt32
         else:
             print("Nieprawidłowy wybór!")
             wrong_choice = True
@@ -44,37 +47,43 @@ while True:
             sampling_rate = int(input(">> "))
             print("Wprowadź długość nagrywania (w sekundach)")
             record_seconds = int(input(">> "))
-            audio = sc.default_microphone()
+            p = pyaudio.PyAudio()
+            stream = p.open(format=quantization_lvl,
+                            channels=CHANNELS,
+                            rate=sampling_rate,
+                            frames_per_buffer=CHUNK,
+                            input=True)
             print("Nagrywanie...")
-            recorded_audio = audio.record(record_seconds*sampling_rate, sampling_rate)
-            original_audio = recorded_audio.copy()
+            frames = []
+            for i in range(0, int(sampling_rate / CHUNK * record_seconds)):
+                data = stream.read(CHUNK)
+                frames.append(data)
             print("Nagrywanie zakończone.")
-            if quantization_lvl == 8:
-                recorded_audio = np.int8(recorded_audio / np.max(abs(recorded_audio)) * np.iinfo("int8").max)
-            elif quantization_lvl == 16:
-                recorded_audio = np.int16(recorded_audio / np.max(abs(recorded_audio)) * np.iinfo("int16").max)
-            else:
-                recorded_audio = np.int32(recorded_audio / np.max(abs(recorded_audio)) * np.iinfo("int32").max)
-            quantized_audio = recorded_audio.astype(np.float64) / np.max(abs(recorded_audio))
-            print(calculate_snr(original_audio, quantized_audio))
+            stream.stop_stream()
+            stream.close()
+            p.terminate()
             print("Wprowadź ścieżkę zapisu pliku z nagraniem")
             filename = input(">> ")
-            write(filename, sampling_rate, recorded_audio)
+            wf = wave.open(filename, 'wb')
+            wf.setnchannels(CHANNELS)
+            wf.setsampwidth(p.get_sample_size(quantization_lvl))
+            wf.setframerate(sampling_rate)
+            wf.writeframes(b''.join(frames))
+            wf.close()
             print("Plik został zapisany.")
     elif choice == "2":
         print("Wprowadź ścieżkę do pliku z nagraniem")
         filename = input(">> ")
-        data = read(filename)
-        sampling_rate = data[0]
-        print("Częstotliwość próbkowania: ", sampling_rate)
-        data = np.float64(data[1] / np.max(abs(data[1])))
-        channels = []
-        for i in range(len(data[0])):
-            channels.append(i)
-        print("Kanały: ", channels)
-        audio = sc.default_speaker()
-        audio.play(data, sampling_rate, channels)
-        print("Odtwarzanie zakończone.")
+        wf = wave.open(filename, 'rb')
+        p = pyaudio.PyAudio()
+        stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                        channels=wf.getnchannels(),
+                        rate=wf.getframerate(),
+                        output=True)
+        while len(data := wf.readframes(CHUNK)):
+            stream.write(data)
+        stream.close()
+        p.terminate()
     else:
         breakFlag = True
     if breakFlag:
