@@ -1,90 +1,52 @@
-import pyaudio
-import wave
-import numpy as np
-from scipy.io import wavfile
-
-breakFlag = False
-quantization_lvl = None
-CHANNELS = 2
-CHUNK = 1024
+from adc import Recorder
+from dac import Player
 
 
-# def calculate_snr(original_signal, quantized_signal):
-#     noise = original_signal - quantized_signal
-#     signal_sqr = np.mean(original_signal ** 2)
-#     noise_sqr = np.mean(noise ** 2)
-#     snr = 10 * np.log10(signal_sqr / noise_sqr)
-#     return snr
+can_continue = False
+main_recorder = Recorder()
+main_player = Player()
+quantization = 16
 
 
 print("")
 print("TELEKOMUNIKACJA I PRZETWARZANIE SYGNAŁÓW - ĆWICZENIE 4. | Autorzy: Kamil Jaśkiewicz, Nikodem Wojtczak")
 while True:
-    wrong_choice = False
-    print("1. Nagranie dźwięku")
-    print("2. Odtworzenie dźwięku z pliku wav, SNR")
-    print("3. Wyjście z programu")
+    print("1. Ustalenie częstotliwości próbkowania i poziomu kwantyzacji")
+    print("2. Nagrywanie")
+    print("3. Odtwarzanie, snr")
+    print("4. Wyjście")
     print("Twój wybór:")
     choice = input(">> ")
     if choice == "1":
-        print("Wybierz poziom kwantyzacji:")
-        print("1. 8-bit")
-        print("2. 16-bit")
-        print("3. 32-bit")
-        print("Twój wybór:")
-        quantization_lvl_choice = input(">> ")
-        if quantization_lvl_choice == "1":
-            quantization_lvl = pyaudio.paInt8
-        elif quantization_lvl_choice == "2":
-            quantization_lvl = pyaudio.paInt16
-        elif quantization_lvl_choice == "3":
-            quantization_lvl = pyaudio.paInt32
-        else:
-            print("Nieprawidłowy wybór!")
-            wrong_choice = True
-        if not wrong_choice:
-            print("Wprowadź częstotliwość próbkowania (w Hz)")
-            sampling_rate = int(input(">> "))
-            print("Wprowadź długość nagrywania (w sekundach)")
-            record_seconds = int(input(">> "))
-            p = pyaudio.PyAudio()
-            stream = p.open(format=quantization_lvl,
-                            channels=CHANNELS,
-                            rate=sampling_rate,
-                            frames_per_buffer=CHUNK,
-                            input=True)
-            print("Nagrywanie...")
-            frames = []
-            for i in range(0, int(sampling_rate / CHUNK * record_seconds)):
-                data = stream.read(CHUNK)
-                frames.append(data)
-            print("Nagrywanie zakończone.")
-            stream.stop_stream()
-            stream.close()
-            p.terminate()
-            print("Wprowadź ścieżkę zapisu pliku z nagraniem")
-            filename = input(">> ")
-            wf = wave.open(filename, 'wb')
-            wf.setnchannels(CHANNELS)
-            wf.setsampwidth(p.get_sample_size(quantization_lvl))
-            wf.setframerate(sampling_rate)
-            wf.writeframes(b''.join(frames))
-            wf.close()
-            print("Plik został zapisany.")
-    elif choice == "2":
-        print("Wprowadź ścieżkę do pliku z nagraniem")
+        try:
+            print("Podaj częstotliwość próbkowania")
+            main_recorder.samplerate = abs(int(input(">> ")))
+        except:
+            print("[BŁĄD] Wprowadzono niewłaściwą częstotliwość. Wybieram domyślną: 48 kHz")
+            main_recorder.samplerate = 48000
+        try:
+            print("Podaj poziom kwantyzacji (8, 16, 32)")
+            quantization = int(input(">> "))
+        except:
+            print("[BŁĄD] Wprowadzono niewłaściwy poziom kwantowania. Wybieram domyślny: 16-bit")
+            quantization = 16
+        can_continue = True
+    if choice == "2" and can_continue:
+        print("Podaj długość nagrywania")
+        record_seconds = int(input(">> "))
+        print("[INFO] Rozpocząłem nagrywanie...")
+        main_recorder.record(record_seconds)
+        print("[INFO] Skończyłem nagrywanie.")
+        print("Podaj ścieżkę zapisu pliku z nagraniem (bez rozszerzenia)")
         filename = input(">> ")
-        wf = wave.open(filename, 'rb')
-        p = pyaudio.PyAudio()
-        stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
-                        channels=wf.getnchannels(),
-                        rate=wf.getframerate(),
-                        output=True)
-        while len(data := wf.readframes(CHUNK)):
-            stream.write(data)
-        stream.close()
-        p.terminate()
-    else:
-        breakFlag = True
-    if breakFlag:
+        main_recorder.save_to_file("{}.wav".format(filename), quantization)
+        print("[INFO] Zapisano.")
+    if choice == "3":
+        print("Podaj ścieżkę do pliku z nagraniem (bez rozszerzenia)")
+        filename = input(">> ")
+        print("[INFO] Odtwarzam nagranie...")
+        snr = main_player.play_from_file("{}.wav".format(filename))
+        print("[INFO] Skończyłem odtwarzanie.")
+        print("SNR dla nagrania wynosi {} dB".format(snr))
+    if choice == "4":
         break
